@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Финансовые итоги дня</title>
+  <meta name="description" content="Финансовый дашборд: ключевые финансово-экономические показатели компании за выбранный день.">
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body class="is-loading">
+  <div class="app" id="app">
+
+    <!-- ШАПКА -->
+    <header class="header">
+      <div class="brand">
+        <svg class="brand-logo" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+          <rect width="32" height="32" rx="8" fill="#2E8B57"/>
+          <path d="M8.5 23v-5M13.5 23v-9M18.5 23v-6.5M23.5 23V9" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" fill="none"/>
+        </svg>
+        <div>
+          <h1 class="brand-title">Финансовые итоги дня <span class="badge-demo" title="Данные сгенерированы для демонстрации">Демо-данные</span></h1>
+          <p class="brand-sub" id="date-label">Загрузка…</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <label>
+          <span class="sr-only">Дата отчёта</span>
+          <input class="date-input" type="date" id="date-input">
+        </label>
+
+        <div class="segmented" id="currency-switch" role="radiogroup" aria-label="Валюта отображения">
+          <button type="button" role="radio" data-value="RUB" aria-checked="true">RUB</button>
+          <button type="button" role="radio" data-value="USD" aria-checked="false">USD</button>
+          <button type="button" role="radio" data-value="EUR" aria-checked="false">EUR</button>
+        </div>
+
+        <span class="updated" id="updated-at" aria-live="polite">Обновлено: —</span>
+
+        <button type="button" class="btn icon-btn" id="refresh-btn" aria-label="Обновить данные" title="Обновить данные">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36"/>
+            <path d="M21 3v6h-6"/>
+          </svg>
+        </button>
+
+        <div class="dropdown" id="export-dropdown">
+          <button type="button" class="btn btn-primary" id="export-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="export-menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <path d="M12 3v12"/>
+              <path d="m7 10 5 5 5-5"/>
+              <path d="M5 21h14"/>
+            </svg>
+            Экспорт
+          </button>
+          <ul class="dropdown-menu" id="export-menu" role="menu" aria-label="Формат экспорта" hidden>
+            <li role="none">
+              <button type="button" role="menuitem" data-export="pdf">
+                <span class="menu-title">PDF</span>
+                <span class="menu-sub">Снимок дашборда</span>
+              </button>
+            </li>
+            <li role="none">
+              <button type="button" role="menuitem" data-export="xlsx">
+                <span class="menu-title">XLSX</span>
+                <span class="menu-sub">Данные дня на отдельных листах</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <main class="dashboard" id="dashboard" aria-busy="true">
+
+      <!-- KPI-КАРТОЧКИ -->
+      <section class="kpi-row" id="kpi-row" aria-label="Ключевые показатели дня">
+        <article class="card kpi-card"></article>
+        <article class="card kpi-card"></article>
+        <article class="card kpi-card"></article>
+        <article class="card kpi-card"></article>
+        <article class="card kpi-card"></article>
+        <article class="card kpi-card"></article>
+      </section>
+
+      <!-- ДИНАМИКА -->
+      <section class="card chart-card area-trend" aria-labelledby="trend-title">
+        <div class="card-head">
+          <h2 class="card-title" id="trend-title">Динамика выручки и прибыли</h2>
+          <div class="segmented segmented-sm" id="period-switch" role="radiogroup" aria-label="Период графика">
+            <button type="button" role="radio" data-value="7" aria-checked="false">7 дн.</button>
+            <button type="button" role="radio" data-value="30" aria-checked="true">30 дн.</button>
+            <button type="button" role="radio" data-value="90" aria-checked="false">90 дн.</button>
+          </div>
+        </div>
+        <div class="chart-box">
+          <canvas id="trend-chart" role="img" aria-label="Линейный график динамики выручки и прибыли"></canvas>
+        </div>
+      </section>
+
+      <!-- ПЛАН / ФАКТ -->
+      <section class="card chart-card area-planfact" aria-labelledby="planfact-title">
+        <div class="card-head">
+          <h2 class="card-title" id="planfact-title">План / факт по статьям</h2>
+          <ul class="legend-inline" aria-label="Легенда">
+            <li><span class="dot dot-plan"></span>План</li>
+            <li><span class="dot dot-fact"></span>Факт</li>
+            <li><span class="dot dot-bad"></span>Хуже плана &gt;&nbsp;10&nbsp;%</li>
+            <li><span class="dot dot-good"></span>Лучше плана &gt;&nbsp;10&nbsp;%</li>
+          </ul>
+        </div>
+        <div class="chart-box">
+          <canvas id="planfact-chart" role="img" aria-label="Горизонтальная диаграмма план/факт по статьям"></canvas>
+        </div>
+      </section>
+
+      <!-- СТРУКТУРА РАСХОДОВ -->
+      <section class="card chart-card area-expenses" aria-labelledby="expenses-title">
+        <div class="card-head">
+          <h2 class="card-title" id="expenses-title">Структура расходов</h2>
+        </div>
+        <div class="expenses-body">
+          <div class="chart-box">
+            <canvas id="expenses-chart" role="img" aria-label="Кольцевая диаграмма структуры расходов"></canvas>
+            <div class="donut-center" aria-hidden="true">
+              <span class="donut-total" id="expenses-total">—</span>
+              <span class="donut-caption">всего за день</span>
+            </div>
+          </div>
+          <ul class="legend-list" id="expenses-legend" aria-label="Статьи расходов"></ul>
+        </div>
+      </section>
+
+      <!-- ЗАДОЛЖЕННОСТИ -->
+      <section class="card area-debts" aria-labelledby="debts-title">
+        <div class="card-head">
+          <h2 class="card-title" id="debts-title">Задолженность</h2>
+        </div>
+        <div class="debts-grid" id="debts"></div>
+      </section>
+
+      <!-- МАКРОПОКАЗАТЕЛИ -->
+      <section class="card area-macro" aria-labelledby="macro-title">
+        <div class="card-head">
+          <h2 class="card-title" id="macro-title">Макропоказатели</h2>
+          <span class="card-note">ЦБ, на дату</span>
+        </div>
+        <ul class="macro-list" id="macro"></ul>
+      </section>
+
+      <!-- ТОП-5 ОТКЛОНЕНИЙ -->
+      <section class="card area-deviations" aria-labelledby="deviations-title">
+        <div class="card-head">
+          <h2 class="card-title" id="deviations-title">Топ-5 отклонений дня</h2>
+          <span class="card-note">по модулю отклонения от плана</span>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Статья</th>
+              <th scope="col">План</th>
+              <th scope="col">Факт</th>
+              <th scope="col">Отклонение</th>
+            </tr>
+          </thead>
+          <tbody id="deviations-body"></tbody>
+        </table>
+      </section>
+
+      <!-- УВЕДОМЛЕНИЯ -->
+      <section class="card area-alerts" aria-labelledby="alerts-title">
+        <div class="card-head">
+          <h2 class="card-title" id="alerts-title">Уведомления и риски</h2>
+          <span class="count-chip" id="alerts-count">0</span>
+        </div>
+        <ul class="alert-list" id="alerts"></ul>
+      </section>
+    </main>
+  </div>
+
+  <!-- Сообщение об ошибке -->
+  <div class="toast" id="toast" role="alert" hidden>
+    <span id="toast-text"></span>
+    <button type="button" class="btn" id="retry-btn">Повторить</button>
+    <button type="button" class="toast-close" id="toast-close" aria-label="Закрыть сообщение">&times;</button>
+  </div>
+
+  <!-- Сторонние библиотеки (CDN, фиксированные версии) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- Приложение -->
+  <script src="js/config.js"></script>
+  <script src="js/format.js"></script>
+  <script src="js/mock-data.js"></script>
+  <script src="js/data-service.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
